@@ -1,6 +1,7 @@
 package com.example.tsd043.roomwordsample
 
 import android.arch.lifecycle.Observer
+import android.arch.lifecycle.ViewModelProviders
 import android.os.Bundle
 import android.support.design.widget.Snackbar
 import android.support.v7.app.AppCompatActivity
@@ -8,27 +9,28 @@ import android.support.v7.widget.LinearLayoutManager
 import android.view.Menu
 import android.view.MenuItem
 import com.example.tsd043.roomwordsample.adapters.WordListAdapter
+import com.example.tsd043.roomwordsample.data.WordRepository
+import com.example.tsd043.roomwordsample.data.WordRoomDatabase
 import com.example.tsd043.roomwordsample.viewmodels.WordViewModel
+import com.example.tsd043.roomwordsample.viewmodels.WordViewModelFactory
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.content_main.*
-import org.koin.android.ext.android.inject
-import org.koin.core.parameter.parametersOf
 
 
 class MainActivity : AppCompatActivity() {
-
-    private val adapter: WordListAdapter by inject { parametersOf(this) }
-
-    private val viewModel: WordViewModel by inject { parametersOf(this) }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
 
+        val adapter = WordListAdapter(this)
         recyclerview.adapter = adapter
         recyclerview.layoutManager = LinearLayoutManager(this)
 
+        val viewModel = ViewModelProviders.of(
+            this,
+            WordViewModelFactory(WordRepository.get(WordRoomDatabase.getDatabase(this).wordDao()))
+        ).get(WordViewModel::class.java)
         viewModel.allWords.observe(this, Observer { words -> words?.let { adapter.setWords(it) } })
 
         fab.setOnClickListener { view ->
